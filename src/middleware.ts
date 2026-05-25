@@ -9,6 +9,7 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/signup") ||
     pathname.startsWith("/api/auth") ||
     pathname === "/api/signup" ||
+    pathname === "/api/login" ||
     pathname.startsWith("/api/warehouses") ||
     pathname.startsWith("/api/teams") ||
     pathname.startsWith("/_next") ||

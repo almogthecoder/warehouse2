@@ -1,27 +1,32 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { loginAction } from "@/app/actions/auth"
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [form, setForm] = useState({ username: "", password: "" })
-  const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError("")
 
-    const errorMsg = await loginAction(form.username, form.password)
-    if (errorMsg) {
-      setError(errorMsg)
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    })
+
+    if (res.ok) {
+      window.location.href = "/dashboard"
+    } else {
+      const data = await res.json()
+      setError(data.error ?? "Login failed")
       setLoading(false)
     }
   }
