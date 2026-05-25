@@ -132,7 +132,7 @@ export default function TeamsPage() {
                 </div>
 
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge variant={team.type === "SPECIAL" ? "secondary" : "outline"} className="text-xs">
+                  <Badge variant={team.type === "SPECIAL" ? "warning" : "outline"} className="text-xs">
                     {team.type === "SPECIAL" ? "ישיר למחסן" : "רגיל"}
                   </Badge>
                 </div>
