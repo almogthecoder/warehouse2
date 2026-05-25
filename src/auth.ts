@@ -45,8 +45,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.username = u.username as string
         token.firstName = u.firstName as string
         token.lastName = u.lastName as string
-        token.role = u.role
-        token.status = u.status
+        token.role = u.role as string
+        token.status = u.status as string
         token.warehouseId = u.warehouseId as string | null
         token.teamId = u.teamId as string | null
       }
