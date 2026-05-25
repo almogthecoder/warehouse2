@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  WORKER
+  TEAM_MANAGER
+  WAREHOUSE_WORKER
+  WAREHOUSE_MANAGER
+  REGIONAL_MANAGER
+  CEO
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum ItemType {
+  BURNABLE
+  REUSABLE
+}
+
+enum RequestStatus {
+  DRAFT
+  PENDING
+  INCLUDED
+  REJECTED
+}
+
+enum OrderStatus {
+  PENDING
+  FULFILLED
+  FLAGGED
+  COMPLETED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TeamType {
+  REGULAR
+  SPECIAL
+}
+
+model Warehouse {
+  id              String            @id @default(cuid())
+  name            String
+  address         String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  users           User[]
+  teams           Team[]
+  items           Item[]
+  workerRequests  WorkerRequest[]
+  supplyOrders    SupplyOrder[]
+  pendingApprovals PendingApproval[]
+}
+
+model User {
+  id          String     @id @default(cuid())
+  firstName   String
+  lastName    String
+  username    String     @unique
+  email       String     @unique
+  password    String
+  role        Role       @default(WORKER)
+  status      UserStatus @default(ACTIVE)
+
+  warehouseId String?
+  warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
+
+  teamId      String?
+  team        Team?      @relation("TeamMembers", fields: [teamId], references: [id])
+
+  managedTeam Team?      @relation("TeamManager")
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  workerRequests   WorkerRequest[]   @relation("WorkerRequests")
+  managerOrders    SupplyOrder[]     @relation("ManagerOrders")
+  fulfilledOrders  SupplyOrder[]     @relation("FulfilledOrders")
+  returnLogs       ReturnLog[]       @relation("ReturnLogs")
+  reviewedApprovals PendingApproval[] @relation("ReviewedApprovals")
+}
+
+model Team {
+  id              String   @id @default(cuid())
+  name            String
+  type            TeamType @default(REGULAR)
+  isBlacklisted   Boolean  @default(false)
+  blacklistReason String?
+
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  managerId   String?   @unique
+  manager     User?     @relation("TeamManager", fields: [managerId], references: [id])
+
+  members     User[]    @relation("TeamMembers")
+
+  workerRequests WorkerRequest[]
+  supplyOrders   SupplyOrder[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Item {
+  id          String   @id @default(cuid())
+  name        String
+  type        ItemType
+  quantity    Int      @default(0)
+  section     String?
+
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  requestItems RequestItem[]
+  orderItems   OrderItem[]
+  returnLogs   ReturnLog[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WorkerRequest {
+  id          String        @id @default(cuid())
+  status      RequestStatus @default(DRAFT)
+  notes       String?
+
+  workerId    String
+  worker      User          @relation("WorkerRequests", fields: [workerId], references: [id])
+
+  teamId      String
+  team        Team          @relation(fields: [teamId], references: [id])
+
+  warehouseId String
+  warehouse   Warehouse     @relation(fields: [warehouseId], references: [id])
+
+  items       RequestItem[]
+
+  orderId     String?
+  order       SupplyOrder?  @relation(fields: [orderId], references: [id])
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model RequestItem {
+  id        String        @id @default(cuid())
+  quantity  Int
+
+  requestId String
+  request   WorkerRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  itemId    String
+  item      Item          @relation(fields: [itemId], references: [id])
+}
+
+model SupplyOrder {
+  id          String      @id @default(cuid())
+  status      OrderStatus @default(PENDING)
+  notes       String?
+
+  managerId   String
+  manager     User        @relation("ManagerOrders", fields: [managerId], references: [id])
+
+  teamId      String
+  team        Team        @relation(fields: [teamId], references: [id])
+
+  warehouseId String
+  warehouse   Warehouse   @relation(fields: [warehouseId], references: [id])
+
+  workerRequests WorkerRequest[]
+  items          OrderItem[]
+  returnLogs     ReturnLog[]
+
+  fulfilledAt   DateTime?
+  fulfilledById String?
+  fulfilledBy   User?     @relation("FulfilledOrders", fields: [fulfilledById], references: [id])
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String      @id @default(cuid())
+  quantity  Int
+  returned  Int         @default(0)
+
+  orderId   String
+  order     SupplyOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  itemId    String
+  item      Item        @relation(fields: [itemId], references: [id])
+}
+
+model ReturnLog {
+  id           String      @id @default(cuid())
+  quantity     Int
+  returnedAt   DateTime    @default(now())
+
+  orderId      String
+  order        SupplyOrder @relation(fields: [orderId], references: [id])
+
+  itemId       String
+  item         Item        @relation(fields: [itemId], references: [id])
+
+  recordedById String
+  recordedBy   User        @relation("ReturnLogs", fields: [recordedById], references: [id])
+}
+
+model PendingApproval {
+  id            String         @id @default(cuid())
+  firstName     String
+  lastName      String
+  username      String
+  email         String
+  password      String
+  requestedRole Role
+  status        ApprovalStatus @default(PENDING)
+  reviewNote    String?
+
+  warehouseId   String
+  warehouse     Warehouse      @relation(fields: [warehouseId], references: [id])
+
+  reviewerId    String?
+  reviewer      User?          @relation("ReviewedApprovals", fields: [reviewerId], references: [id])
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}

@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell($env:Path = [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"Machine\"\\) + \";\" + [System.Environment]::GetEnvironmentVariable\\(\"Path\",\"User\"\\); node --version; npm --version)",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "PowerShell(Start-Sleep -Seconds 5; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000\" -TimeoutSec 10 -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\" } catch { \"Error: $_\" })",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\avihu\\\\OneDrive\\\\Desktop\\\\warehouse\\\\node_modules\\\\next-auth\" -Recurse -Filter \"*.js\")",
+      "Bash(Select-String \"session-token\")",
+      "Bash(Select-Object -First 10 Path, Line)",
+      "Bash(npm run *)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;C:\\\\Users\\\\avihu\\\\AppData\\\\Roaming\\\\npm;$env:PATH\"; Set-Location \"C:\\\\Users\\\\avihu\\\\OneDrive\\\\Desktop\\\\warehouse\"; npm run dev 2>&1 | Select-Object -First 50)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;C:\\\\Users\\\\avihu\\\\AppData\\\\Roaming\\\\npm;$env:PATH\"; Set-Location \"C:\\\\Users\\\\avihu\\\\OneDrive\\\\Desktop\\\\warehouse\"; $job = Start-Job { param\\($path\\) Set-Location $path; $env:PATH = \"C:\\\\Program Files\\\\nodejs;C:\\\\Users\\\\avihu\\\\AppData\\\\Roaming\\\\npm;$env:PATH\"; npm run dev 2>&1 } -ArgumentList \"C:\\\\Users\\\\avihu\\\\OneDrive\\\\Desktop\\\\warehouse\"; Start-Sleep -Seconds 12; Receive-Job $job; Stop-Job $job; Remove-Job $job)",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\" -ErrorAction SilentlyContinue; Get-ChildItem \"C:\\\\Users\\\\avihu\\\\AppData\\\\Roaming\\\\npm\\\\npm.cmd\" -ErrorAction SilentlyContinue; $env:PATH -split \";\" | Where-Object { $_ -match \"node|npm\" })",
+      "Bash(grep -v \"//.*גד\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git config *)"
+    ]
+  }
+}
