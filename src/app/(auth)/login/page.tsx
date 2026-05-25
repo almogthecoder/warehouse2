@@ -23,8 +23,6 @@ export default function LoginPage() {
     if (errorMsg) {
       setError(errorMsg)
       setLoading(false)
-    } else {
-      window.location.href = "/dashboard"
     }
   }
 

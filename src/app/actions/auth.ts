@@ -4,11 +4,12 @@ import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { encode } from "next-auth/jwt"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
 const COOKIE_NAME = "authjs.session-token"
 const MAX_AGE = 30 * 24 * 60 * 60 // 30 days
 
-export async function loginAction(username: string, password: string): Promise<string | null> {
+export async function loginAction(username: string, password: string): Promise<string | undefined> {
   if (!username || !password) return "Please enter username and password"
 
   const user = await prisma.user.findUnique({ where: { username } })
@@ -58,5 +59,5 @@ export async function loginAction(username: string, password: string): Promise<s
     maxAge: MAX_AGE,
   })
 
-  return null
+  redirect("/dashboard")
 }
