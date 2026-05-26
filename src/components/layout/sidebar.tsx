@@ -3,10 +3,11 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard, Package, ClipboardList, Users, Building2,
-  ShieldBan, CheckCircle, Warehouse, LogOut, Menu, X, ScrollText,
+  ShieldBan, CheckCircle, Warehouse, LogOut, Menu, X, ScrollText, Trash2,
 } from "lucide-react"
 
 interface NavItem {
@@ -42,13 +43,22 @@ interface SidebarProps {
   role: string
   firstName: string
   lastName: string
+  userId: string
   open: boolean
   setOpen: (v: boolean) => void
 }
 
-export function Sidebar({ role, firstName, lastName, open, setOpen }: SidebarProps) {
+export function Sidebar({ role, firstName, lastName, userId, open, setOpen }: SidebarProps) {
   const pathname = usePathname()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(role))
+
+  async function deleteOwnAccount() {
+    setDeleting(true)
+    await fetch(`/api/users/${userId}`, { method: "DELETE" })
+    await signOut({ callbackUrl: "/login" })
+  }
 
   return (
     <>
@@ -118,7 +128,38 @@ export function Sidebar({ role, firstName, lastName, open, setOpen }: SidebarPro
             <LogOut className="w-4 h-4" />
             יציאה
           </button>
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-300/70 hover:bg-red-500/20 hover:text-red-300 transition-all"
+          >
+            <Trash2 className="w-4 h-4" />
+            מחיקת חשבון
+          </button>
         </div>
+
+        {/* Delete account confirmation overlay */}
+        {confirmDelete && (
+          <div className="absolute inset-0 bg-blue-950/95 z-50 flex flex-col items-center justify-center p-6 text-center">
+            <Trash2 className="w-10 h-10 text-red-400 mb-4" />
+            <p className="text-white font-semibold mb-2">מחיקת חשבון</p>
+            <p className="text-blue-200 text-sm mb-6">האם למחוק את החשבון שלך לצמיתות? לא ניתן לבטל פעולה זו.</p>
+            <div className="flex flex-col gap-2 w-full">
+              <button
+                onClick={deleteOwnAccount}
+                disabled={deleting}
+                className="w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors disabled:opacity-60"
+              >
+                {deleting ? "מוחק..." : "כן, מחק את החשבון"}
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="w-full py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        )}
       </aside>
     </>
   )

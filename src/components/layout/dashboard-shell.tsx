@@ -29,6 +29,7 @@ export function DashboardShell({
         role={session.user.role}
         firstName={session.user.firstName}
         lastName={session.user.lastName}
+        userId={session.user.id}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
