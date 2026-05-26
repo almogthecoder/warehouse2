@@ -23,6 +23,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await bcrypt.compare(credentials.password as string, user.password)
         if (!valid) return null
 
+        let effectiveTeamId = user.teamId
+        if (user.role === "TEAM_MANAGER") {
+          const managedTeam = await prisma.team.findFirst({
+            where: { managerId: user.id },
+            select: { id: true },
+          })
+          effectiveTeamId = managedTeam?.id ?? null
+        }
+
         return {
           id: user.id,
           username: user.username,
@@ -32,7 +41,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           status: user.status,
           warehouseId: user.warehouseId,
-          teamId: user.teamId,
+          teamId: effectiveTeamId,
         }
       },
     }),

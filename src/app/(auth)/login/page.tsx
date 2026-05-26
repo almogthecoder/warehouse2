@@ -26,7 +26,7 @@ export default function LoginPage() {
       window.location.href = "/dashboard"
     } else {
       const data = await res.json()
-      setError(data.error ?? "Login failed")
+      setError(data.error ?? "שגיאה בכניסה")
       setLoading(false)
     }
   }

@@ -13,7 +13,8 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/api/warehouses") ||
     pathname.startsWith("/api/teams") ||
     pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico"
+    pathname === "/favicon.ico" ||
+    pathname.startsWith("/api/debug-session")
 
   if (isPublic) return NextResponse.next()
 
