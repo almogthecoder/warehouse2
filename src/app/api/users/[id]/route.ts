@@ -38,11 +38,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  if (!["REGIONAL_MANAGER", "CEO"].includes(session.user.role)) {
+
+  const { id } = await params
+  const isSelf = session.user.id === id
+  const isAdmin = ["REGIONAL_MANAGER", "CEO"].includes(session.user.role)
+
+  if (!isSelf && !isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { id } = await params
   await prisma.user.delete({ where: { id } })
   return NextResponse.json({ message: "User deleted" })
 }

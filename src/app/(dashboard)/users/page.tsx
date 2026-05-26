@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,6 +9,7 @@ import { Dialog } from "@/components/ui/dialog"
 import { Select } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Users, Pencil, Trash2 } from "lucide-react"
+import { signOut } from "next-auth/react"
 import { ROLE_LABELS } from "@/lib/utils"
 
 interface Team { id: string; name: string; type: string }
@@ -24,6 +26,9 @@ const STATUS_COLORS: Record<string, "default" | "success" | "warning" | "destruc
 }
 
 export default function UsersPage() {
+  const { data: session } = useSession()
+  const currentUserId = session?.user?.id
+  const isAdmin = ["CEO", "REGIONAL_MANAGER"].includes(session?.user?.role ?? "")
   const [users, setUsers] = useState<User[]>([])
   const [editUser, setEditUser] = useState<User | null>(null)
   const [editOpen, setEditOpen] = useState(false)
@@ -87,7 +92,12 @@ export default function UsersPage() {
     if (!deleteUser) return
     setLoading(true)
     await fetch(`/api/users/${deleteUser.id}`, { method: "DELETE" })
-    setLoading(false); setDeleteUser(null); load()
+    setLoading(false)
+    if (deleteUser.id === currentUserId) {
+      await signOut({ callbackUrl: "/login" })
+    } else {
+      setDeleteUser(null); load()
+    }
   }
 
   const filtered = users.filter((u) =>
@@ -138,12 +148,16 @@ export default function UsersPage() {
                     </div>
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => openEdit(user)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => setDeleteUser(user)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isAdmin && (
+                      <button onClick={() => openEdit(user)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    )}
+                    {(isAdmin || user.id === currentUserId) && (
+                      <button onClick={() => setDeleteUser(user)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -206,11 +220,14 @@ export default function UsersPage() {
       <Dialog open={!!deleteUser} onClose={() => setDeleteUser(null)} title="מחיקת משתמש">
         <div className="space-y-4">
           <p className="text-slate-600 text-sm">
-            האם למחוק את המשתמש{" "}
-            <span className="font-semibold text-slate-900">
-              {deleteUser?.firstName} {deleteUser?.lastName}
-            </span>
-            ? פעולה זו אינה הפיכה.
+            {deleteUser?.id === currentUserId
+              ? "האם למחוק את החשבון שלך? לאחר המחיקה תצא מהמערכת ולא תוכל להתחבר שוב."
+              : <>האם למחוק את המשתמש{" "}
+                  <span className="font-semibold text-slate-900">
+                    {deleteUser?.firstName} {deleteUser?.lastName}
+                  </span>
+                  ? פעולה זו אינה הפיכה.</>
+            }
           </p>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setDeleteUser(null)} className="flex-1">ביטול</Button>
