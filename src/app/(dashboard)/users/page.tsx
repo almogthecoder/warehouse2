@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog } from "@/components/ui/dialog"
 import { Select } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Users, Pencil } from "lucide-react"
+import { Users, Pencil, Trash2 } from "lucide-react"
 import { ROLE_LABELS } from "@/lib/utils"
 
 interface Team { id: string; name: string; type: string }
@@ -29,6 +29,7 @@ export default function UsersPage() {
   const [editOpen, setEditOpen] = useState(false)
   const [form, setForm] = useState({ status: "", userRole: "", teamId: "", managedTeamId: "" })
   const [teams, setTeams] = useState<Team[]>([])
+  const [deleteUser, setDeleteUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState("")
 
@@ -82,6 +83,13 @@ export default function UsersPage() {
     setLoading(false); setEditOpen(false); load()
   }
 
+  async function removeUser() {
+    if (!deleteUser) return
+    setLoading(true)
+    await fetch(`/api/users/${deleteUser.id}`, { method: "DELETE" })
+    setLoading(false); setDeleteUser(null); load()
+  }
+
   const filtered = users.filter((u) =>
     `${u.firstName} ${u.lastName} ${u.username} ${u.email}`.toLowerCase().includes(search.toLowerCase())
   )
@@ -129,9 +137,14 @@ export default function UsersPage() {
                       {user.managedTeam && <span className="text-xs text-slate-400">· מנהל: {user.managedTeam.name}</span>}
                     </div>
                   </div>
-                  <button onClick={() => openEdit(user)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
-                    <Pencil className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-1">
+                    <button onClick={() => openEdit(user)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setDeleteUser(user)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -186,6 +199,22 @@ export default function UsersPage() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setEditOpen(false)} className="flex-1">ביטול</Button>
             <Button onClick={saveEdit} loading={loading} className="flex-1">שמור שינויים</Button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog open={!!deleteUser} onClose={() => setDeleteUser(null)} title="מחיקת משתמש">
+        <div className="space-y-4">
+          <p className="text-slate-600 text-sm">
+            האם למחוק את המשתמש{" "}
+            <span className="font-semibold text-slate-900">
+              {deleteUser?.firstName} {deleteUser?.lastName}
+            </span>
+            ? פעולה זו אינה הפיכה.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setDeleteUser(null)} className="flex-1">ביטול</Button>
+            <Button variant="destructive" onClick={removeUser} loading={loading} className="flex-1">מחק</Button>
           </div>
         </div>
       </Dialog>
